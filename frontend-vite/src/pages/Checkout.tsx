@@ -38,16 +38,16 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
 
   const mensagem = useMemo(() => {
     const loja = nomeLoja ? ` — Loja: ${nomeLoja}` : ''
-    const header = `Olá! Pedido${loja}:`
+    const header = `🛒 Pedido${loja}:`
     const produtos = items.map((it, idx) => {
-      const subtotal = (it.quantity * it.price).toFixed(2)
-      const unit = it.price.toFixed(2)
-      return `${idx + 1}) ${it.quantity}x ${it.name} — R$ ${unit} (subtotal R$ ${subtotal})`
+      const subtotal = (it.quantity * it.price).toFixed(2).replace('.', ',')
+      const unit = it.price.toFixed(2).replace('.', ',')
+      return `${idx + 1}) ${it.quantity}× • 💵 R$ ${unit} • 🧮 R$ ${subtotal} • ${it.name}`
     })
     const extras = [] as string[]
-    if (nome) extras.push(`Nome: ${nome}`)
-    if (telefoneCliente) extras.push(`Telefone: ${telefoneCliente}`)
-    const totalLinha = `Total: R$ ${total.toFixed(2)}`
+    if (nome) extras.push(`🧍 Nome: ${nome}`)
+    if (telefoneCliente) extras.push(`📱 Telefone: ${telefoneCliente}`)
+    const totalLinha = `Total: R$ ${total.toFixed(2).replace('.', ',')}`
     const texto = [header, '', ...produtos, '', totalLinha, ...extras].join('\n')
     return encodeURIComponent(texto)
   }, [items, total, nome, telefoneCliente, nomeLoja])
@@ -74,7 +74,10 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
   if (items.length === 0) {
     return (
       <div className="p-4 md:p-6">
-        <h1 className="text-xl font-bold mb-4">Checkout</h1>
+        <div className="mb-3">
+        <button onClick={() => navigate('/')} className="text-sm text-primary hover:underline">← Voltar às compras</button>
+      </div>
+      <h1 className="text-xl font-bold mb-4">Checkout</h1>
         <p className="text-gray-500">Seu carrinho está vazio.</p>
       </div>
     )

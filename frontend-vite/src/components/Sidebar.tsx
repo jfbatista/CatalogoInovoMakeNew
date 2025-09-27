@@ -25,7 +25,7 @@ export function Sidebar({ selected, onSelect }: Props) {
             className={`text-left px-3 py-2 rounded-md transition-colors ${!selected ? 'bg-primary/10 text-primary border border-primary/20' : 'hover:text-primary'}`}
             onClick={() => onSelect(null)}
           >
-            Todas
+            LISTAR TODAS
           </button>
           {isLoading && <div className="px-3 py-2 text-gray-500 text-sm">Carregando...</div>}
           {data.map((c) => (

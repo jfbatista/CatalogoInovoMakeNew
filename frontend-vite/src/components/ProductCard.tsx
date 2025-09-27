@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useToast } from './ToastProvider'
 import { useState } from 'react'
+// Drawer global só abre no detalhe; na Home não usaremos aqui
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart()
@@ -66,6 +67,7 @@ export function ProductCard({ product }: { product: Product }) {
             setAdded(true)
             show('Produto adicionado ao carrinho', 'success')
             setTimeout(() => setAdded(false), 1200)
+            // não abrir o mini carrinho na Home conforme solicitado
           }}
         >
           Comprar

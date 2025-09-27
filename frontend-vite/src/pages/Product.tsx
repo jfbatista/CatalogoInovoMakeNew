@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../services/products'
 import { imagesService } from '../services/images'
 import { useCart } from '../context/CartContext'
+import { useToast } from '../components/ToastProvider'
+import { MiniCartDrawer } from '../components/MiniCartDrawer'
 import { useEffect, useState } from 'react'
 
 export default function Product({ depositoId }: { depositoId: string | null }) {
@@ -11,6 +13,10 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
   const navigate = useNavigate()
   const [selectedImg, setSelectedImg] = useState<string | null>(null)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [addedBanner, setAddedBanner] = useState(false)
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [lastAddedId, setLastAddedId] = useState<string | null>(null)
+  const { show } = useToast()
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id, depositoId],
     queryFn: () => productsService.getById(id as string, depositoId),
@@ -49,7 +55,11 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
   )
   const defaultUrl = product.ImagemUrl || imgs[0]?.AWSLink || '/sem-imagem.svg'
   const mainUrl = selectedImg || defaultUrl
-  const images = [product.ImagemUrl, ...(imgs.map((i) => i.AWSLink).filter(Boolean))].filter(Boolean) as string[]
+  // Sempre incluir a imagem principal (mesmo que seja placeholder) para o lightbox ter conteúdo.
+  const images = Array.from(new Set([
+    defaultUrl,
+    ...imgs.map((i) => i.AWSLink).filter(Boolean) as string[]
+  ]))
 
   const precoBase = Number((product as any).Preco ?? 0) || 0
   const isPromo = !!(product as any).EmPromocao && Number((product as any).PrecoPromocional ?? 0) > 0
@@ -94,12 +104,25 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
 
           <div className="flex gap-3">
             <button
-              onClick={() => add({ product: { ...(product as any), Preco: precoMostrar } as any, image: mainUrl, quantity: 1 })}
+              onClick={() => {
+                add({ product: { ...(product as any), Preco: precoMostrar } as any, image: mainUrl, quantity: 1 })
+                setAddedBanner(true)
+                setLastAddedId(product._id as any)
+                setDrawerOpen(true)
+                show('Produto adicionado ao carrinho', 'success')
+              }}
               className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600 transition-colors"
             >
               Adicionar ao carrinho
             </button>
           </div>
+          {addedBanner && (
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+              <span className="text-emerald-300">Adicionado ao carrinho.</span>
+              <button onClick={() => navigate('/carrinho')} className="px-3 py-1 rounded border border-border hover:border-primary hover:text-primary">Ver carrinho</button>
+              <button onClick={() => setAddedBanner(false)} className="px-3 py-1 rounded border border-border hover:border-primary hover:text-primary">Continuar</button>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -107,6 +130,8 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
     {lightboxOpen && (
       <Lightbox images={images} initialIndex={Math.max(0, images.indexOf(mainUrl))} onClose={() => setLightboxOpen(false)} />
     )}
+    {/* Mini cart drawer após adicionar */}
+    <MiniCartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} lastAddedId={lastAddedId} />
     </>
   )
 }
@@ -127,9 +152,17 @@ function Lightbox({ images, initialIndex, onClose }: { images: string[]; initial
     <div className="fixed inset-0 z-[100] bg-black/70 flex items-center justify-center p-4" onClick={onClose}>
       <div className="max-w-5xl w-full" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-2">
-          <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={() => setIndex((i) => (i - 1 + images.length) % images.length)}>←</button>
-          <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={onClose}>Fechar</button>
-          <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={() => setIndex((i) => (i + 1) % images.length)}>→</button>
+          {images.length > 1 ? (
+            <>
+              <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={() => setIndex((i) => (i - 1 + images.length) % images.length)}>←</button>
+              <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={onClose}>Fechar</button>
+              <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={() => setIndex((i) => (i + 1) % images.length)}>→</button>
+            </>
+          ) : (
+            <div className="w-full flex justify-end">
+              <button className="px-3 py-1.5 bg-surface rounded-md border border-border hover:border-primary" onClick={onClose}>Fechar</button>
+            </div>
+          )}
         </div>
         <img src={src} className="w-full max-h-[80vh] object-contain rounded-md border border-border bg-surface" />
       </div>

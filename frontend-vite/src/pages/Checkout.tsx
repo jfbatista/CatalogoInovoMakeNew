@@ -2,13 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { useCart } from '../context/CartContext'
 import { depositosService } from '../services/depositos'
 import { useToast } from '../components/ToastProvider'
+import { useNavigate } from 'react-router-dom'
 
 export default function Checkout({ depositoId }: { depositoId: string | null }) {
   const { items, total, clear } = useCart()
   const [nome, setNome] = useState('')
   const [telefoneCliente, setTelefoneCliente] = useState('')
   const [whatsLoja, setWhatsLoja] = useState<string>('')
+  const [success, setSuccess] = useState(false)
   const { show } = useToast()
+  const navigate = useNavigate()
 
   useEffect(() => {
     let active = true
@@ -40,6 +43,17 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
 
   const link = whatsLoja ? `https://wa.me/${whatsLoja}?text=${mensagem}` : '#'
 
+  function handleFinish() {
+    if (!whatsLoja) return
+    try {
+      window.open(link, '_blank', 'noopener')
+    } catch {}
+    show('Pedido enviado pelo WhatsApp', 'success')
+    clear()
+    setSuccess(true)
+    setTimeout(() => navigate('/'), 2500)
+  }
+
   // máscara simples para telefone BR (somente dígitos -> 55XX9XXXXYYYY)
   function maskPhone(value: string) {
     const digits = value.replace(/\D+/g, '')
@@ -57,6 +71,12 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
 
   return (
     <div className="p-4 md:p-6 max-w-3xl">
+      {success && (
+        <div className="mb-4 p-3 rounded-md border border-emerald-800/40 bg-emerald-900/20 text-emerald-200 flex items-center justify-between">
+          <span>Pedido enviado com sucesso. Você pode acompanhar pelo WhatsApp.</span>
+          <button className="ml-4 px-3 py-1.5 rounded-md border border-emerald-700 hover:bg-emerald-700/20" onClick={() => navigate('/')}>Voltar à Home agora</button>
+        </div>
+      )}
       <h1 className="text-xl font-bold mb-4">Checkout</h1>
 
       <div className="space-y-3 mb-6">
@@ -91,9 +111,9 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
         </div>
         <div className="flex justify-between mb-2"><span>Total</span><span className="font-semibold">R$ {total.toFixed(2)}</span></div>
         <div className="text-xs text-gray-400 mb-4">Entrega e condições serão combinadas pelo WhatsApp da loja.</div>
-        <a href={link} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
+        <button onClick={handleFinish} className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
           Finalizar no WhatsApp
-        </a>
+        </button>
         <button className="ml-2 inline-flex items-center gap-2 border border-border px-4 py-2 rounded-md" onClick={() => clear()}>Limpar carrinho</button>
       </div>
     </div>

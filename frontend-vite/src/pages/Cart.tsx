@@ -1,11 +1,14 @@
 import { useCart } from '../context/CartContext'
 import { useNavigate, Link } from 'react-router-dom'
 import { useToast } from '../components/ToastProvider'
+import { ConfirmDialog } from '../components/ConfirmDialog'
+import { useState } from 'react'
 
 export default function Cart() {
   const { items, total, remove, setQty, clear } = useCart()
   const navigate = useNavigate()
   const { show } = useToast()
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   if (items.length === 0) {
     return (
@@ -52,9 +55,18 @@ export default function Cart() {
           <div className="flex justify-between mb-2"><span>Subtotal</span><span className="font-semibold">R$ {total.toFixed(2)}</span></div>
           <div className="text-xs text-gray-400 mb-4">Frete e condições a combinar pelo WhatsApp.</div>
           <button className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600" onClick={() => navigate('/checkout')}>Finalizar pedido</button>
-          <button className="w-full mt-2 border border-border px-4 py-2 rounded-md" onClick={() => { clear(); show('Carrinho limpo', 'info') }}>Limpar carrinho</button>
+          <button className="w-full mt-2 border border-border px-4 py-2 rounded-md" onClick={() => setConfirmOpen(true)}>Limpar carrinho</button>
         </aside>
       </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Limpar carrinho?"
+        description="Essa ação removerá todos os itens do seu carrinho. Deseja continuar?"
+        confirmText="Sim, limpar"
+        cancelText="Cancelar"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => { clear(); setConfirmOpen(false); show('Carrinho limpo', 'info') }}
+      />
     </div>
   )
 }

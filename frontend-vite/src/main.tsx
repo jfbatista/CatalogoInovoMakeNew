@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter } from 'react-router-dom'
 import { CartProvider } from './context/CartContext'
 import { ToastProvider } from './components/ToastProvider'
+import { CartUIProvider } from './components/CartUIContext'
 import App from './App'
 import './index.css'
 
@@ -15,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <CartProvider>
           <ToastProvider>
-            <App />
+            <CartUIProvider>
+              <App />
+            </CartUIProvider>
           </ToastProvider>
         </CartProvider>
       </BrowserRouter>

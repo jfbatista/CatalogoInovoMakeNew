@@ -53,7 +53,7 @@ export function ProductCard({ product }: { product: Product }) {
             <span className="text-sm font-semibold text-primary price-animated">R$ {precoAtual.toFixed(2)}</span>
           </div>
         ) : (
-          <div className="text-sm text-gray-300 price-animated">R$ {precoAtual.toFixed(2)}</div>
+          <div className="text-sm price-text price-animated">R$ {precoAtual.toFixed(2)}</div>
         )}
       </div>
       {/* CTA Comprar */}

@@ -99,7 +99,7 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
               <span className="text-2xl font-bold text-primary">R$ {precoMostrar.toFixed(2)}</span>
             </div>
           ) : (
-            <div className="text-2xl font-bold text-primary mb-4">R$ {precoMostrar.toFixed(2)}</div>
+            <div className="text-2xl font-bold price-text mb-4">R$ {precoMostrar.toFixed(2)}</div>
           )}
 
           <div className="flex gap-3">

@@ -10,6 +10,7 @@
   --primary: #ff007f;
   --primary-600: #e60073;
   --primary-200: #ff8ac2;
+  --price-color: #111827; /* text color for prices in light theme */
 }
 
 /* Tema escuro */
@@ -20,9 +21,13 @@
   --primary: #ff007f;
   --primary-600: #e60073;
   --primary-200: #ff8ac2;
+  --price-color: #e5e7eb; /* brighter price on dark */
 }
 
 body { @apply bg-surface text-text; }
+
+/* Price text that adapts to theme */
+.price-text { color: var(--price-color); }
 
 /* Barra de rolagem visível e confortável na sidebar */
 .scroll-area {

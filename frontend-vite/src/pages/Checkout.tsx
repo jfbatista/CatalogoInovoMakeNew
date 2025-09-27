@@ -9,6 +9,7 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
   const [nome, setNome] = useState('')
   const [telefoneCliente, setTelefoneCliente] = useState('')
   const [whatsLoja, setWhatsLoja] = useState<string>('')
+  const [nomeLoja, setNomeLoja] = useState<string>('')
   const [success, setSuccess] = useState(false)
   const { show } = useToast()
   const navigate = useNavigate()
@@ -20,6 +21,13 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
       try {
         const numero = await depositosService.getWhatsapp(depositoId)
         if (active) setWhatsLoja(numero)
+        // tentar buscar o nome/descrição da loja
+        try {
+          const lista = await depositosService.getAll()
+          const dep = lista.find((d: any) => d._id === depositoId)
+          const label = dep?.DescricaoReduzida || dep?.Descricao || dep?.Nome || ''
+          if (active && label) setNomeLoja(label)
+        } catch {}
       } catch {
         if (active) setWhatsLoja('5561984498130')
       }
@@ -29,17 +37,20 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
   }, [depositoId])
 
   const mensagem = useMemo(() => {
-    const linhas = [
-      'Olá! Gostaria de finalizar este pedido:',
-      '',
-      ...items.map((it) => `• ${it.quantity}x ${it.name} — R$ ${(it.price).toFixed(2)} (subtotal R$ ${(it.quantity * it.price).toFixed(2)})`),
-      '',
-      `Total: R$ ${total.toFixed(2)}`,
-    ]
-    if (nome) linhas.push(`Nome: ${nome}`)
-    if (telefoneCliente) linhas.push(`Telefone: ${telefoneCliente}`)
-    return encodeURIComponent(linhas.join('\n'))
-  }, [items, total, nome, telefoneCliente])
+    const loja = nomeLoja ? ` — Loja: ${nomeLoja}` : ''
+    const header = `Olá! Pedido${loja}:`
+    const produtos = items.map((it, idx) => {
+      const subtotal = (it.quantity * it.price).toFixed(2)
+      const unit = it.price.toFixed(2)
+      return `${idx + 1}) ${it.quantity}x ${it.name} — R$ ${unit} (subtotal R$ ${subtotal})`
+    })
+    const extras = [] as string[]
+    if (nome) extras.push(`Nome: ${nome}`)
+    if (telefoneCliente) extras.push(`Telefone: ${telefoneCliente}`)
+    const totalLinha = `Total: R$ ${total.toFixed(2)}`
+    const texto = [header, '', ...produtos, '', totalLinha, ...extras].join('\n')
+    return encodeURIComponent(texto)
+  }, [items, total, nome, telefoneCliente, nomeLoja])
 
   const link = whatsLoja ? `https://wa.me/${whatsLoja}?text=${mensagem}` : '#'
 
@@ -70,7 +81,7 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl">
+    <div className="p-4 md:p-6 max-w-6xl">
       {success && (
         <div className="mb-4 p-3 rounded-md border border-emerald-800/40 bg-emerald-900/20 text-emerald-200 flex items-center justify-between">
           <span>Pedido enviado com sucesso. Você pode acompanhar pelo WhatsApp.</span>
@@ -79,42 +90,55 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
       )}
       <h1 className="text-xl font-bold mb-4">Checkout</h1>
 
-      <div className="space-y-3 mb-6">
-        <div>
-          <label className="block text-sm mb-1">Seu nome (opcional)</label>
-          <input value={nome} onChange={(e) => setNome(e.target.value)} className="w-full bg-surface border border-border rounded px-3 py-2" placeholder="Ex.: Maria Souza" />
-        </div>
-        <div>
-          <label className="block text-sm mb-1">Seu telefone (opcional)</label>
-          <input value={telefoneCliente} onChange={(e) => setTelefoneCliente(maskPhone(e.target.value))} className="w-full bg-surface border border-border rounded px-3 py-2" placeholder="Ex.: 61999999999" />
-        </div>
-      </div>
+      <div className="grid md:grid-cols-3 gap-6">
+        {/* Coluna esquerda: dados mínimos do cliente */}
+        <section className="md:col-span-1 border border-border rounded-lg p-4 bg-surface h-fit">
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm mb-1">Seu nome</label>
+              <input value={nome} onChange={(e) => setNome(e.target.value)} className="w-full bg-surface border border-border rounded px-3 py-2" placeholder="Ex.: Maria Souza" />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Seu telefone</label>
+              <input value={telefoneCliente} onChange={(e) => setTelefoneCliente(maskPhone(e.target.value))} className="w-full bg-surface border border-border rounded px-3 py-2" placeholder="Ex.: 61999999999" />
+            </div>
+            <div className="text-xs text-gray-400">WhatsApp da loja: <span className="font-mono">{whatsLoja || '—'}</span>
+              <button
+                className="ml-2 text-xs border border-border rounded px-2 py-1 hover:border-primary hover:text-primary"
+                onClick={() => { if (whatsLoja) navigator.clipboard.writeText(whatsLoja).then(() => show('Número da loja copiado', 'success')) }}
+                disabled={!whatsLoja}
+              >
+                Copiar
+              </button>
+            </div>
+          </div>
+        </section>
 
-      <div className="border border-border rounded-lg p-4 bg-surface">
-        <h2 className="font-semibold mb-2">Resumo</h2>
-        <ul className="text-sm text-gray-300 mb-3">
-          {items.map((it) => (
-            <li key={it.productId}>{it.quantity}x {it.name} — R$ {(it.quantity * it.price).toFixed(2)}</li>
-          ))}
-        </ul>
-        <div className="text-xs text-gray-400 mb-2">WhatsApp da loja: <span className="font-mono">{whatsLoja || '—'}</span>
-          <button
-            className="ml-2 text-xs border border-border rounded px-2 py-1 hover:border-primary hover:text-primary"
-            onClick={() => {
-              if (!whatsLoja) return
-              navigator.clipboard.writeText(whatsLoja).then(() => show('Número da loja copiado', 'success'))
-            }}
-            disabled={!whatsLoja}
-          >
-            Copiar
-          </button>
-        </div>
-        <div className="flex justify-between mb-2"><span>Total</span><span className="font-semibold">R$ {total.toFixed(2)}</span></div>
-        <div className="text-xs text-gray-400 mb-4">Entrega e condições serão combinadas pelo WhatsApp da loja.</div>
-        <button onClick={handleFinish} className="inline-flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">
-          Finalizar no WhatsApp
-        </button>
-        <button className="ml-2 inline-flex items-center gap-2 border border-border px-4 py-2 rounded-md" onClick={() => clear()}>Limpar carrinho</button>
+        {/* Coluna direita: lista dos produtos e ação */}
+        <section className="md:col-span-2 space-y-4">
+          <div className="border border-border rounded-lg p-4 bg-surface">
+            <h2 className="font-semibold mb-3">Seus produtos</h2>
+            <div className="space-y-3">
+              {items.map((it) => (
+                <div key={it.productId} className="flex items-center gap-3 border border-border rounded-lg p-3">
+                  <img src={it.image || '/sem-imagem.svg'} className="w-14 h-14 object-cover rounded border border-border" onError={(e) => (e.currentTarget.src = '/sem-imagem.svg')} />
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium line-clamp-1">{it.name}</div>
+                    <div className="text-xs price-text">R$ {it.price.toFixed(2)}</div>
+                  </div>
+                  <div className="text-sm text-gray-400">{it.quantity}x</div>
+                  <div className="w-24 text-right font-semibold price-text">R$ {(it.quantity * it.price).toFixed(2)}</div>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-between mt-4"><span>Total</span><span className="font-semibold price-text">R$ {total.toFixed(2)}</span></div>
+            <div className="text-xs text-gray-400 mt-1">Entrega e condições serão combinadas pelo WhatsApp da loja.</div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button onClick={handleFinish} className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700">Finalizar no WhatsApp</button>
+              <button className="border border-border px-4 py-2 rounded-md" onClick={() => clear()}>Limpar carrinho</button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )

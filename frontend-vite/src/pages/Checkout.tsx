@@ -3,6 +3,8 @@ import { useCart } from '../context/CartContext'
 import { depositosService } from '../services/depositos'
 import { useToast } from '../components/ToastProvider'
 import { useNavigate } from 'react-router-dom'
+import { productsService } from '../services/products'
+import type { Product } from '../types'
 
 export default function Checkout({ depositoId }: { depositoId: string | null }) {
   const { items, total, clear } = useCart()
@@ -10,6 +12,7 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
   const [telefoneCliente, setTelefoneCliente] = useState('')
   const [whatsLoja, setWhatsLoja] = useState<string>('')
   const [nomeLoja, setNomeLoja] = useState<string>('')
+  const [codes, setCodes] = useState<Record<string, string>>({})
   const [success, setSuccess] = useState(false)
   const { show } = useToast()
   const navigate = useNavigate()
@@ -36,14 +39,37 @@ export default function Checkout({ depositoId }: { depositoId: string | null }) 
     return () => { active = false }
   }, [depositoId])
 
+  // Buscar códigos dos produtos do carrinho para compor a mensagem
+  useEffect(() => {
+    let active = true
+    async function loadCodes() {
+      const missing = items.filter((it) => !codes[it.productId]).map((it) => it.productId)
+      if (missing.length === 0) return
+      try {
+        const results: Product[] = await Promise.all(missing.map((id) => productsService.getById(id, depositoId)))
+        if (!active) return
+        const next: Record<string, string> = {}
+        results.forEach((p: Product) => {
+          const code = (p as any).Codigo || (p as any).codigo || (p as any).code || ''
+          if ((p as any)._id && code) next[(p as any)._id] = String(code)
+        })
+        if (Object.keys(next).length) setCodes((prev) => ({ ...prev, ...next }))
+      } catch {
+        // silencioso
+      }
+    }
+    loadCodes()
+    return () => { active = false }
+  }, [items, depositoId])
+
   const mensagem = useMemo(() => {
     const loja = nomeLoja ? ` — Loja: ${nomeLoja}` : ''
     const header = `Pedido${loja}:`
     const produtos = items.map((it, idx) => {
       const subtotal = (it.quantity * it.price).toFixed(2).replace('.', ',')
       const unit = it.price.toFixed(2).replace('.', ',')
-      const code = (it as any).code || (it as any).codigo || (it as any).Codigo
-      const nameWithCode = code ? `[${code}] ${it.name}` : it.name
+      const code = codes[it.productId]
+      const nameWithCode = code ? `${code} - ${it.name}` : it.name
       return `${idx + 1}) Qtd: ${it.quantity} | Unit: R$ ${unit} | Subtotal: R$ ${subtotal} | ${nameWithCode}`
     })
     const extras = [] as string[]

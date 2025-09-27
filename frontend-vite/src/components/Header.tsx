@@ -29,12 +29,23 @@ export function Header({ selectedDepositoId, onChangeDeposito, search, onChangeS
     staleTime: 1000 * 60 * 10
   })
 
-  // definir depósito padrão como o primeiro do endpoint
+  // Remover a loja "ESTOQUE" da lista exibida
+  const visibleDepositos = useMemo(() => {
+    return (depositos || []).filter((d) => {
+      const label = (d.DescricaoReduzida || d.Descricao || d.Nome || '').toUpperCase()
+      return label !== 'ESTOQUE'
+    })
+  }, [depositos])
+
+  // definir depósito padrão como o primeiro da lista visível
   useEffect(() => {
-    if (!selectedDepositoId && depositos.length > 0) {
-      onChangeDeposito(depositos[0]._id)
+    if (visibleDepositos.length === 0) return
+    // se não houver selecionado, ou o selecionado estiver oculto, seleciona o primeiro visível
+    const selectedIsHidden = !!selectedDepositoId && !visibleDepositos.some((d) => d._id === selectedDepositoId)
+    if (!selectedDepositoId || selectedIsHidden) {
+      onChangeDeposito(visibleDepositos[0]._id)
     }
-  }, [selectedDepositoId, depositos, onChangeDeposito])
+  }, [selectedDepositoId, visibleDepositos, onChangeDeposito])
 
   // manter input sincronizado com valor externo
   useEffect(() => {
@@ -120,7 +131,7 @@ export function Header({ selectedDepositoId, onChangeDeposito, search, onChangeS
             onChange={(e) => onChangeDeposito(e.target.value || null)}
             disabled={isLoading}
           >
-            {depositos.map((d) => (
+            {visibleDepositos.map((d) => (
               <option key={d._id} value={d._id}>
                 {d.DescricaoReduzida || d.Descricao || d.Nome || d._id}
               </option>

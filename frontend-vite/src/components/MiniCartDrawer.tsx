@@ -19,12 +19,12 @@ export function MiniCartDrawer({ open, onClose, lastAddedId }: { open: boolean; 
       {/* backdrop */}
       <div className={`absolute inset-0 bg-black/40 transition-opacity duration-200 ease-out ${open ? 'opacity-100' : 'opacity-0'}`} onClick={onClose} />
       {/* panel */}
-      <aside className={`absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-border shadow-xl transition-transform duration-200 ease-out ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-        <header className="p-4 border-b border-border flex items-center justify-between">
+      <aside className={`absolute right-0 top-0 h-full w-full max-w-md bg-surface border-l border-border shadow-xl transition-transform duration-200 ease-out ${open ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
+        <header className="p-4 border-b border-border shrink-0 flex items-center justify-between">
           <h3 className="font-semibold">Resumo do carrinho <span className="text-xs text-gray-400 align-middle">({items.length} item{items.length === 1 ? '' : 's'})</span></h3>
           <button className="px-3 py-1.5 border border-border rounded-md hover:border-primary" onClick={onClose}>Fechar</button>
         </header>
-        <div className="p-4 space-y-3 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+        <div className="p-4 space-y-3 overflow-y-auto flex-1">
           {items.length === 0 ? (
             <div className="text-sm text-gray-400">Seu carrinho está vazio.</div>
           ) : (
@@ -48,15 +48,17 @@ export function MiniCartDrawer({ open, onClose, lastAddedId }: { open: boolean; 
             ))
           )}
         </div>
-        <footer className="p-4 border-t border-border">
+        <footer className="p-4 border-t border-border shrink-0">
           <div className="flex justify-between mb-3"><span>Total</span><span className="font-semibold">R$ {total.toFixed(2)}</span></div>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {lastAddedId && items.some(i => i.productId === lastAddedId) && (
-              <button className="border border-border px-3 py-2 rounded-md text-sm" onClick={() => { remove(lastAddedId); show('Último item desfeito', 'info') }}>Desfazer</button>
+              <button className="w-full border border-border px-3 py-2 rounded-md text-sm" onClick={() => { remove(lastAddedId); show('Último item desfeito', 'info') }}>Desfazer</button>
             )}
-            <button className="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600" onClick={() => { navigate('/checkout'); onClose() }}>Finalizar pedido</button>
-            <button className="border border-border px-4 py-2 rounded-md" onClick={() => { navigate('/carrinho'); onClose() }}>Ver carrinho</button>
-            <button className="border border-border px-4 py-2 rounded-md" onClick={() => { navigate('/'); onClose() }}>Continuar comprando</button>
+            <button className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600" onClick={() => { navigate('/checkout'); onClose() }}>Finalizar pedido</button>
+            <div className="flex gap-2">
+              <button className="flex-1 border border-border px-4 py-2 rounded-md" onClick={() => { navigate('/carrinho'); onClose() }}>Ver carrinho</button>
+              <button className="flex-1 border border-border px-4 py-2 rounded-md" onClick={() => { navigate('/'); onClose() }}>Continuar comprando</button>
+            </div>
           </div>
         </footer>
       </aside>

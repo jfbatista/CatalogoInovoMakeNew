@@ -1,9 +1,11 @@
 import { useCart } from '../context/CartContext'
 import { useNavigate, Link } from 'react-router-dom'
+import { useToast } from '../components/ToastProvider'
 
 export default function Cart() {
   const { items, total, remove, setQty, clear } = useCart()
   const navigate = useNavigate()
+  const { show } = useToast()
 
   if (items.length === 0) {
     return (
@@ -28,12 +30,21 @@ export default function Cart() {
                 <div className="text-sm text-gray-400">R$ {it.price.toFixed(2)}</div>
               </div>
               <div className="flex items-center gap-2">
-                <button className="px-2 py-1 border border-border rounded" onClick={() => setQty(it.productId, Math.max(1, it.quantity - 1))}>-</button>
-                <input className="w-12 text-center bg-surface border border-border rounded" value={it.quantity} onChange={(e) => setQty(it.productId, Math.max(1, parseInt(e.target.value) || 1))} />
-                <button className="px-2 py-1 border border-border rounded" onClick={() => setQty(it.productId, it.quantity + 1)}>+</button>
+                <button aria-label="Diminuir" className="w-9 h-9 text-lg border border-border rounded-md active:scale-[0.98]" onClick={() => { setQty(it.productId, Math.max(1, it.quantity - 1)); show('Quantidade atualizada', 'info') }}>−</button>
+                <input
+                  className="w-14 h-9 text-center bg-surface border border-border rounded-md"
+                  value={it.quantity}
+                  onChange={(e) => setQty(it.productId, Math.max(1, parseInt(e.target.value) || 1))}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowUp') { e.preventDefault(); setQty(it.productId, it.quantity + 1); show('Quantidade atualizada', 'info') }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); setQty(it.productId, Math.max(1, it.quantity - 1)); show('Quantidade atualizada', 'info') }
+                  }}
+                  inputMode="numeric"
+                />
+                <button aria-label="Aumentar" className="w-9 h-9 text-lg border border-border rounded-md active:scale-[0.98]" onClick={() => { setQty(it.productId, it.quantity + 1); show('Quantidade atualizada', 'info') }}>+</button>
               </div>
               <div className="w-28 text-right font-semibold">R$ {(it.quantity * it.price).toFixed(2)}</div>
-              <button className="ml-2 text-sm text-red-400 hover:text-red-300" onClick={() => remove(it.productId)}>Remover</button>
+              <button className="ml-2 text-sm text-red-400 hover:text-red-300" onClick={() => { remove(it.productId); show('Item removido do carrinho', 'info') }}>Remover</button>
             </div>
           ))}
         </div>
@@ -41,7 +52,7 @@ export default function Cart() {
           <div className="flex justify-between mb-2"><span>Subtotal</span><span className="font-semibold">R$ {total.toFixed(2)}</span></div>
           <div className="text-xs text-gray-400 mb-4">Frete e condições a combinar pelo WhatsApp.</div>
           <button className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600" onClick={() => navigate('/checkout')}>Finalizar pedido</button>
-          <button className="w-full mt-2 border border-border px-4 py-2 rounded-md" onClick={() => clear()}>Limpar carrinho</button>
+          <button className="w-full mt-2 border border-border px-4 py-2 rounded-md" onClick={() => { clear(); show('Carrinho limpo', 'info') }}>Limpar carrinho</button>
         </aside>
       </div>
     </div>

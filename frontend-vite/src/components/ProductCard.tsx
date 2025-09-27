@@ -3,11 +3,13 @@ import type { Product } from '../types'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useToast } from './ToastProvider'
 import { useState } from 'react'
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart()
   const [added, setAdded] = useState(false)
+  const { show } = useToast()
   const { data } = useQuery({
     queryKey: ['img', product._id],
     queryFn: () => imagesService.getByProductId(product._id),
@@ -22,7 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
   const precoAtual = isPromo ? (product.PrecoPromocional as number) : product.Preco
 
   return (
-    <Link to={`/produto/${product._id}`} className="group block relative rounded-xl overflow-hidden border border-border bg-surface transition-colors hover:border-primary">
+    <Link to={`/produto/${product._id}`} className="group block relative rounded-xl overflow-hidden border border-border bg-surface transition-all hover:border-primary hover:shadow-lg hover:shadow-primary/10 hover:-translate-y-0.5">
       {/* Shine */}
       <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
 
@@ -47,10 +49,10 @@ export function ProductCard({ product }: { product: Product }) {
         {isPromo ? (
           <div className="flex items-baseline gap-2">
             <span className="text-xs text-gray-400 line-through">R$ {product.Preco.toFixed(2)}</span>
-            <span className="text-sm font-semibold text-primary">R$ {precoAtual.toFixed(2)}</span>
+            <span className="text-sm font-semibold text-primary price-animated">R$ {precoAtual.toFixed(2)}</span>
           </div>
         ) : (
-          <div className="text-sm text-gray-300">R$ {precoAtual.toFixed(2)}</div>
+          <div className="text-sm text-gray-300 price-animated">R$ {precoAtual.toFixed(2)}</div>
         )}
       </div>
       {/* CTA Comprar */}
@@ -62,6 +64,7 @@ export function ProductCard({ product }: { product: Product }) {
             e.stopPropagation()
             add({ product: { ...(product as any), Preco: precoAtual } as any, image: src, quantity: 1 })
             setAdded(true)
+            show('Produto adicionado ao carrinho', 'success')
             setTimeout(() => setAdded(false), 1200)
           }}
         >

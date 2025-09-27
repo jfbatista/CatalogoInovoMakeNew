@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { productsService } from '../services/products'
 import { imagesService } from '../services/images'
 import { useCart } from '../context/CartContext'
+import { useState } from 'react'
 
 export default function Product({ depositoId }: { depositoId: string | null }) {
   const { id } = useParams()
   const { add } = useCart()
   const navigate = useNavigate()
+  const [selectedImg, setSelectedImg] = useState<string | null>(null)
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', id, depositoId],
     queryFn: () => productsService.getById(id as string, depositoId),
@@ -21,7 +23,8 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
   })
 
   if (isLoading || !product) return <div className="p-4">Carregando...</div>
-  const mainUrl = product.ImagemUrl || imgs[0]?.AWSLink || '/sem-imagem.svg'
+  const defaultUrl = product.ImagemUrl || imgs[0]?.AWSLink || '/sem-imagem.svg'
+  const mainUrl = selectedImg || defaultUrl
 
   const precoBase = Number((product as any).Preco ?? 0) || 0
   const isPromo = !!(product as any).EmPromocao && Number((product as any).PrecoPromocional ?? 0) > 0
@@ -37,9 +40,14 @@ export default function Product({ depositoId }: { depositoId: string | null }) {
           <img src={mainUrl} alt={product.Nome} className="w-full rounded-lg border border-border object-cover" onError={(e) => (e.currentTarget.src = '/sem-imagem.svg')} />
           {imgs.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
-              {imgs.slice(0, 5).map((img) => (
-                <img key={img.AWSLink} src={img.AWSLink} className="w-full h-20 object-cover rounded border border-border" />
-              ))}
+              {imgs.slice(0, 5).map((img) => {
+                const active = (selectedImg || defaultUrl) === img.AWSLink
+                return (
+                  <button key={img.AWSLink} onClick={() => setSelectedImg(img.AWSLink || null)} className={`rounded border ${active ? 'border-primary' : 'border-border'} overflow-hidden`}> 
+                    <img src={img.AWSLink} className="w-full h-20 object-cover" />
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>

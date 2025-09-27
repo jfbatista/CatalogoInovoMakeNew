@@ -2,8 +2,12 @@ import { imagesService } from '../services/images'
 import type { Product } from '../types'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { useState } from 'react'
 
 export function ProductCard({ product }: { product: Product }) {
+  const { add } = useCart()
+  const [added, setAdded] = useState(false)
   const { data } = useQuery({
     queryKey: ['img', product._id],
     queryFn: () => imagesService.getByProductId(product._id),
@@ -49,6 +53,24 @@ export function ProductCard({ product }: { product: Product }) {
           <div className="text-sm text-gray-300">R$ {precoAtual.toFixed(2)}</div>
         )}
       </div>
+      {/* CTA Comprar */}
+      <div className="absolute right-2 bottom-2 z-[2]">
+        <button
+          className="bg-primary text-white text-xs px-3 py-1.5 rounded-md hover:bg-primary-600"
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            add({ product: { ...(product as any), Preco: precoAtual } as any, image: src, quantity: 1 })
+            setAdded(true)
+            setTimeout(() => setAdded(false), 1200)
+          }}
+        >
+          Comprar
+        </button>
+      </div>
+      {added && (
+        <span className="absolute left-2 bottom-2 text-[10px] bg-emerald-600 text-white px-2 py-1 rounded">Adicionado!</span>
+      )}
     </Link>
   )
 }

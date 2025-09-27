@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { depositosService, type Deposito } from '../services/depositos'
 import { useTheme } from '../hooks/useTheme'
@@ -16,6 +16,8 @@ export function Header({ selectedDepositoId, onChangeDeposito, search, onChangeS
   const { theme, setTheme } = useTheme()
   const { count } = useCart()
   const navigate = useNavigate()
+  const [inputValue, setInputValue] = useState<string>(search)
+  const [typing, setTyping] = useState<boolean>(false)
   const { data: depositos = [], isLoading } = useQuery<Deposito[]>({
     queryKey: ['depositos'],
     queryFn: depositosService.getAll,
@@ -28,6 +30,21 @@ export function Header({ selectedDepositoId, onChangeDeposito, search, onChangeS
       onChangeDeposito(depositos[0]._id)
     }
   }, [selectedDepositoId, depositos, onChangeDeposito])
+
+  // manter input sincronizado com valor externo
+  useEffect(() => {
+    setInputValue(search)
+  }, [search])
+
+  // debounce da busca (300ms)
+  useEffect(() => {
+    setTyping(true)
+    const t = setTimeout(() => {
+      onChangeSearch(inputValue)
+      setTyping(false)
+    }, 300)
+    return () => clearTimeout(t)
+  }, [inputValue, onChangeSearch])
 
   return (
     <header className="sticky top-0 z-10 bg-surface/90 backdrop-blur border-b border-border">
@@ -57,12 +74,18 @@ export function Header({ selectedDepositoId, onChangeDeposito, search, onChangeS
             <input
               id="search"
               type="text"
-              value={search}
-              onChange={(e) => onChangeSearch(e.target.value)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               placeholder="Buscar produtos..."
               className="w-full bg-surface border border-border rounded-md pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
             />
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" d="M10 2a8 8 0 105.293 14.293l4.707 4.707a1 1 0 001.414-1.414l-4.707-4.707A8 8 0 0010 2zm-6 8a6 6 0 1110.392 4.243A6 6 0 014 10z" clipRule="evenodd"/></svg>
+            {typing && (
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+              </svg>
+            )}
           </div>
         </div>
 

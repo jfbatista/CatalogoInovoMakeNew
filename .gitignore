@@ -1,0 +1,53 @@
+# Root ignores
+.DS_Store
+Thumbs.db
+node_modules/
+*.log
+logs/
+*.tmp
+*.temp
+.env
+.env.*
+*.local
+
+# Backend
+backend/node_modules/
+backend/.env
+backend/.env.*
+backend/dist/
+backend/build/
+backend/npm-debug.log*
+backend/yarn-debug.log*
+backend/yarn-error.log*
+backend/pnpm-debug.log*
+
+# Frontend (Vite)
+frontend-vite/node_modules/
+frontend-vite/.env
+frontend-vite/.env.*
+frontend-vite/dist/
+frontend-vite/build/
+frontend-vite/npm-debug.log*
+frontend-vite/yarn-debug.log*
+frontend-vite/yarn-error.log*
+frontend-vite/pnpm-debug.log*
+
+# OS junk
+**/*.swp
+**/*.swo
+**/*~
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# Coverage/Reports
+coverage/
+reports/
+
+# Images cache (if any)
+.tmp/
+.cache/
+.vite/
+frontend-vite/.vite/

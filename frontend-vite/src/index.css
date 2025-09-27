@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema claro (default) */
+:root {
+  --surface: #f8fafc; /* slate-50 */
+  --border: #e5e7eb;  /* gray-200 */
+  --text: #0f172a;    /* slate-900 */
+  --primary: #ff007f;
+  --primary-600: #e60073;
+  --primary-200: #ff8ac2;
+}
+
+/* Tema escuro */
+.dark {
+  --surface: #0b0f16;
+  --border: #1f2937;
+  --text: #e5e7eb;
+  --primary: #ff007f;
+  --primary-600: #e60073;
+  --primary-200: #ff8ac2;
+}
+
+body { @apply bg-surface text-text; }
+
+/* Barra de rolagem visível e confortável na sidebar */
+.scroll-area {
+  scrollbar-gutter: stable;
+}
+.scroll-area::-webkit-scrollbar {
+  width: 10px;
+}
+.scroll-area::-webkit-scrollbar-track {
+  background: rgba(255,255,255,0.03);
+}
+.scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.35);
+  border-radius: 8px;
+}
+.scroll-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.6);
+}

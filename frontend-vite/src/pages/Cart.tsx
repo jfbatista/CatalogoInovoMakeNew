@@ -46,7 +46,6 @@ export default function Cart() {
                 />
                 <button aria-label="Aumentar" className="w-9 h-9 text-lg border border-border rounded-md active:scale-[0.98]" onClick={() => { setQty(it.productId, it.quantity + 1); show('Quantidade atualizada', 'info') }}>+</button>
               </div>
-              <div className="w-28 text-right font-semibold">R$ {(it.quantity * it.price).toFixed(2)}</div>
               <button className="ml-2 text-sm text-red-400 hover:text-red-300" onClick={() => { remove(it.productId); show('Item removido do carrinho', 'info') }}>Remover</button>
             </div>
           ))}
@@ -55,7 +54,10 @@ export default function Cart() {
           <div className="flex justify-between mb-2"><span>Subtotal</span><span className="font-semibold">R$ {total.toFixed(2)}</span></div>
           <div className="text-xs text-gray-400 mb-4">Frete e condições a combinar pelo WhatsApp.</div>
           <button className="w-full bg-primary text-white px-4 py-2 rounded-md hover:bg-primary-600" onClick={() => navigate('/checkout')}>Finalizar pedido</button>
-          <button className="w-full mt-2 border border-border px-4 py-2 rounded-md" onClick={() => setConfirmOpen(true)}>Limpar carrinho</button>
+          <div className="flex gap-2 mt-2">
+            <button className="flex-1 border border-border px-4 py-2 rounded-md" onClick={() => navigate('/')}>Continuar comprando</button>
+            <button className="flex-1 border border-border px-4 py-2 rounded-md" onClick={() => setConfirmOpen(true)}>Limpar carrinho</button>
+          </div>
         </aside>
       </div>
       <ConfirmDialog
